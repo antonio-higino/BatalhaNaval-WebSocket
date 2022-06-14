@@ -1,17 +1,15 @@
 # BatalhaNaval
-implementação do jogo batalha naval usando websockets
-nodemon:
-npm i --save-dev nodemon
-npm run dev
 
-heroku com git:
-git init
-npm init
-git add .
-git commit -m "comentario"
-git push heroku master 
+Implementação do jogo batalha naval usando websockets
 
-heroku login
-heroku apps:create nomedaaplicacao
-heroku git:remote nomedaaplicacao
-heroku open
+Grupo:
+
+- Antonio Higino
+- Denys Rafael
+- Sérgio Pires
+
+Para executar:
+--- Estando na pasta raiz --- 
+- npm i (para instalar dependências)
+- npm start (para iniciar o servidor)
+- http://localhost:3000/ (para jogar)
