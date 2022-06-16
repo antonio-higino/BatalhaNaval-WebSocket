@@ -190,6 +190,18 @@ wss.on('connection', socket => {
             }
           });
           break;
+        case "chat":
+          wss.clients.forEach(function each(client) {
+            if (client.readyState === WebSocket.OPEN) {
+              client.send(JSON.stringify({
+                type: 'resposta-chat',
+                data: packet.data,
+                PID: packet.PID,
+                cor: packet.cor,
+              }))
+            }
+          });
+          break;
       }
     }
   });

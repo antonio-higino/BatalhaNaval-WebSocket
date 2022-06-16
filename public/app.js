@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const carrier = document.querySelector('.carrier-container')
   const startButton = document.querySelector('#start')
   const rotateButton = document.querySelector('#rotate')
+  const botaoChat = document.querySelector('#botaochat')
+  const inputTexto = document.querySelector('#inputtext')
+  const caixachat = document.querySelector('#chat')
   const turnDisplay = document.querySelector('#whose-go')
   const infoDisplay = document.querySelector('#info')
   const setupButtons = document.getElementById('setup-buttons')
@@ -28,45 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let todosNaviosPosicionados = false
   let tiroRealizado = -1
   let playersConectados = false
-  
-  //Navios
-  const ArrayNavios = [
-    {
-      name: 'destroyer',
-      directions: [
-        [0, 1],
-        [0, tamanho]
-      ]
-    },
-    {
-      name: 'submarine',
-      directions: [
-        [0, 1, 2],
-        [0, tamanho, tamanho * 2]
-      ]
-    },
-    {
-      name: 'cruiser',
-      directions: [
-        [0, 1, 2],
-        [0, tamanho, tamanho * 2]
-      ]
-    },
-    {
-      name: 'battleship',
-      directions: [
-        [0, 1, 2, 3],
-        [0, tamanho, tamanho * 2, tamanho * 3]
-      ]
-    },
-    {
-      name: 'carrier',
-      directions: [
-        [0, 1, 2, 3, 4],
-        [0, tamanho, tamanho * 2, tamanho * 3, tamanho * 4]
-      ]
-    },
-  ]
 
   criarTabuleiro(userGrid, userSquares)
   criarTabuleiro(oponentGrid, oponentSquares)
@@ -80,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let carrierCount = 0
 
   function iniciarJogo() {
+    chat("esperando outro jogador...")
     ws.addEventListener("message", ({ data }) => {
       const packet = JSON.parse(data);
 
@@ -90,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
           playerNum = parseInt(packet.data)
           partidaUUID = packet.PID
           if (playerNum === 1) jogadorAtual = "enemy"
+          if(playerNum === 0){inputTexto.style.color = 'blue'}else{inputTexto.style.color = 'red'}
 
           console.log("Seu playerNum: ", playerNum)
 
@@ -148,6 +114,9 @@ document.addEventListener('DOMContentLoaded', () => {
           case "vitoria-wo":
             if(isGameOver==false && podeWO==true){wo()}
             break;
+          case "resposta-chat":
+            chat(packet.data, packet.cor)
+            break;
         }
       }
     });
@@ -177,9 +146,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function jogadorConectouOuDisconectou(num) {
       console.log("playerConnectDisconnectFunction: ", num);
-      if (parseInt(num) == 1) { playersConectados = true }
+      if (parseInt(num) == 1) { playersConectados = true;}
       let player = `.p${parseInt(num) + 1}`
       document.querySelector(`${player} .connected`).classList.toggle('active')
+      if(document.querySelector('.p2 .connected').classList.contains('active')){
+          chat("oponente conectado!")
+      }
+
       if (parseInt(num) === playerNum) document.querySelector(player).style.fontWeight = 'bold'
     }
   }
@@ -216,6 +189,52 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   rotateButton.addEventListener('click', rotate)
+
+  function chat(texto, cor=-1) {
+       let item = document.createElement('option')
+       item.text = texto
+       switch (cor) {
+        case -1:
+          item.style.color = 'black'
+          break;
+        case 0:
+          item.style.color = 'blue'
+          break;
+        case 1:
+          item.style.color = 'red'
+          break;
+       }
+       caixachat.appendChild(item)
+       caixachat.scrollTop = caixachat.scrollHeight;
+  }
+
+  function enviarChat() {
+    if(inputTexto.value.length == 0){
+      window.alert('digite algum texto!')
+   }
+   else{
+       //caixachat.innerHTML = ''
+       let n = inputTexto.value
+       ws.send(JSON.stringify({
+        type: 'chat',
+        data: n,
+        PID: partidaUUID,
+        cor: playerNum,
+      }))
+   }
+    //enviar pro servidor
+  }
+
+  botaoChat.addEventListener('click', enviarChat)
+  window.addEventListener("keydown", function (event) {
+  
+    if (event.key !== undefined) {
+      console.log("tecla:", event.key)
+      if(event.key == 'Enter'){enviarChat()}
+    } else if (event.which !== undefined) {
+      // Handle the event with KeyboardEvent.which
+    }
+  });
 
   //Mover o navio do usuario (arrastar)
   ships.forEach(ship => ship.addEventListener('dragstart', dragStart))
@@ -270,6 +289,9 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(i)
         if (userSquares[parseInt(this.dataset.id) - selectedShipIndex + i] == undefined) { console.log("undefined!!!Horizontal"); return; }
       }
+      for(let i = 0; i < draggedShipLength; i++){
+        if(userSquares[parseInt(this.dataset.id) - selectedShipIndex + i].classList.contains('taken')) {return}
+      }
       for (let i = 0; i < draggedShipLength; i++) {
         let directionClass
         if (i === 0) directionClass = 'start'
@@ -278,19 +300,23 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       //Verifica se o navio está dentro da grid, se não estiver o navio voltará para a posição original
-    } else if (!isHorizontal && !newNotAllowedVertical.includes(shipLastId)) {
+    } else if (!isHorizontal && !newNotAllowedVertical.includes(selectedShipIndex)) {
       for (let i = 0; i < draggedShipLength; i++) {
-        if (userSquares[parseInt(this.dataset.id) - selectedShipIndex + tamanho * i] == undefined) { console.log("undefined!!!Vertical"); return; }
+        if (userSquares[parseInt(this.dataset.id) - selectedShipIndex*10 + tamanho * i] == undefined) { console.log("undefined!!!Vertical"); return; }
       }
+      for(let i = 0; i < draggedShipLength; i++){
+        if(userSquares[parseInt(this.dataset.id) - selectedShipIndex*10 + tamanho * i].classList.contains('taken')) {return}
+      }                         
       for (let i = 0; i < draggedShipLength; i++) {
         let directionClass
         if (i === 0) directionClass = 'start'
         if (i === draggedShipLength - 1) directionClass = 'end'
+        console.log("draggedShiplength", draggedShipLength)
         console.log("directionClass:", directionClass)
         console.log("parseInt:", parseInt(this.dataset.id))
         console.log("selectedShip:", selectedShipIndex)
-        console.log("classlist:", userSquares[parseInt(this.dataset.id) - selectedShipIndex + tamanho * i])
-        userSquares[parseInt(this.dataset.id) - selectedShipIndex + tamanho * i].classList.add('taken', 'vertical', directionClass, shipClass)
+        console.log("classlist:", userSquares[parseInt(this.dataset.id) - selectedShipIndex*10 + tamanho * i])
+        userSquares[parseInt(this.dataset.id) - selectedShipIndex*10 + tamanho * i].classList.add('taken', 'vertical', directionClass, shipClass)
       }
     } else return
 
@@ -441,6 +467,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function wo() {
     console.log("WO")
     infoDisplay.innerHTML = "Você venceu por W.O. (Atualize a página para jogar novamente)"
+    chat("o outro jogador saiu..")
+    setupButtons.style.display = 'none'
     gameOver()
   }
 })
