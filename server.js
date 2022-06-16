@@ -75,6 +75,7 @@ wss.on('connection', socket => {
     if (partidas[pp] !== undefined) {
       wss.clients.forEach(function each(client) {
         if (client !== socket && client.readyState === WebSocket.OPEN) {
+        console.log("enviou wo!")
           client.send(JSON.stringify({
             type: 'vitoria-wo',
             PID: pp,

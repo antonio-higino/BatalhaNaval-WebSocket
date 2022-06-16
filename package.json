@@ -1,7 +1,7 @@
 {
-  "name": "battleships",
+  "name": "batalha_naval",
   "version": "1.0.0",
-  "description": "Multiplayer Battleship Game",
+  "description": "Batalha Naval Online",
   "main": "server.js",
   "keywords": [],
   "author": "",

@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const oponentSquares = []
   let isHorizontal = true
   let isGameOver = false
+  let podeWO = true
   let jogadorAtual = 'user'
   const tamanho = 10
   let playerNum = 0
@@ -90,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
           partidaUUID = packet.PID
           if (playerNum === 1) jogadorAtual = "enemy"
 
-          console.log("Seu playerNum: ", playerNum + 1)
+          console.log("Seu playerNum: ", playerNum)
 
           // Pegar o status do outro jogador
           ws.send(JSON.stringify({
@@ -101,10 +102,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
       if (partidaUUID == packet.PID) {
+        console.log("switch-app")
         switch (packet.type) {
           // Outro jogador se conectou ou se desconectou
           case "conexao-jogador":
-            console.log(`Jogador numbero ${packet.data} se conectou ou se desconectou`)
+            console.log(`Jogador numero ${packet.data} se conectou ou se desconectou`)
             jogadorConectouOuDisconectou(packet.data)
             break;
           // Quando o oponente esta pronto
@@ -144,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
             comecarPartida(ws)
             break;
           case "vitoria-wo":
-            wo()
+            if(isGameOver==false && podeWO==true){wo()}
             break;
         }
       }
@@ -340,11 +342,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (obj.includes('taken')) {
       enemySquare.classList.add('acertou')
+      jogadorAtual = 'user'
     } else {
       enemySquare.classList.add('errou')
+      jogadorAtual = 'enemy'
     }
     checarPorVitorias()
-    jogadorAtual = 'enemy'
+    //jogadorAtual = 'enemy'
   }
 
   let oponentDestroyerCount = 0
@@ -364,7 +368,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (userSquares[square].classList.contains('carrier')) ++oponentCarrierCount
       checarPorVitorias()
     }
-    jogadorAtual = 'user'
+    const hit = userSquares[square].classList.contains('taken')
+    if(!hit){jogadorAtual = 'user'}
     turnDisplay.innerHTML = 'Your Go'
   }
 
@@ -416,6 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if ((oponentDestroyerCount + oponentSubmarineCount + oponentCruiserCount + oponentBattleshipCount + oponentCarrierCount) === 50) {
       infoDisplay.innerHTML = `Você perdeu, mais sorte na próxima (Atualize a página para jogar novamente)`
+      podeWO = false
       gameOver()
     }
   }
@@ -433,6 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function wo() {
+    console.log("WO")
     infoDisplay.innerHTML = "Você venceu por W.O. (Atualize a página para jogar novamente)"
     gameOver()
   }

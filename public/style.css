@@ -20,8 +20,11 @@ body {
 }
 
 .splash-title {
-  font-family: 'Bangers', cursive;
-  font-size: 10rem;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 5rem;
+  padding: .5em 1em;
+  display: flex;
+  justify-content: center;
 }
 
 .btn {
